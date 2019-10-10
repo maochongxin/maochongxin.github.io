@@ -1,0 +1,101 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>Modern C++</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">Modern C++</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2019年9月19日
+
+
+
+
+ </div>
+--->
+</div>
+
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#右值引用"><span class="toc-text">右值引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#右值与左值"><span class="toc-text">右值与左值</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#移动语义"><span class="toc-text">移动语义</span></a></li></ol>
+<h2 id="右值引用"><a href="#右值引用" class="headerlink" title="右值引用"></a>右值引用</h2><p>右值引用是 Moving semantics 和 Prefect forwarding 的基石:</p>
+<p>Moving semantics:<br>    将内存所有权从一个对象转移到另一个对象, 可以替换效率低下的复制. 使用 move constructor 和 move  assignment operator 来实现.</p>
+<p>Prefect forwarding:<br>    定义一个 template function, 可以接受任意类型参数, 将参数转发给目标函数, 保证目标函数接受的参数类型与传递给 template function 的类型相同.</p>
+<h2 id="右值与左值"><a href="#右值与左值" class="headerlink" title="右值与左值"></a>右值与左值</h2><p>C++ 11 中, 每个表达式有两个属性: type(除去引用特性,用于类型检查) 和 value category(用于语法检查)</p>
+<p>value category 有三个基本类型: lvalue、 prvalue、xrvalue. 后两者统称 rvalue. 比较好的区分方法就是: 可以取地址的值就是左值, 不是左值的就是右值.</p>
+<p>区分xrvalue 和 prvalue:</p>
+<p>prvalue(pure rvalue): 表达式产生的中间值</p>
+<p>xrvalue: 通过右值引用产生的值</p>
+<p>右值引用的作用: 延长初始化对象的生命周期.</p>
+<p>写法:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span>&amp;&amp; rr = <span class="number">200</span>;</span><br><span class="line">rr = <span class="number">100</span>; <span class="comment">// 右值引用被初始化后就称为左值.</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">(<span class="keyword">int</span>&amp;&amp; val)</span> </span>&#123;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; value;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		foo(<span class="number">200</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>PS: const 引用可以接收右值, 在做参数时, 如果没有接收右值引用的重载版本, const 引用参数可以接收右值在引用.</p>
+<h2 id="移动语义"><a href="#移动语义" class="headerlink" title="移动语义"></a>移动语义</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DynamicArray</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">		explicit DynamicArray(int size): _size(size), array &#123; new T[size] &#125; &#123;</span><br><span class="line">				<span class="built_in">cout</span> &lt;&lt; <span class="string">"Constructor: dynamic array is created!\n"</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		~DynamicArray() &#123;</span><br><span class="line">				<span class="keyword">delete</span>[] <span class="built_in">array</span>;</span><br><span class="line">				<span class="built_in">cout</span> &lt;&lt; <span class="string">"Destructor: dynamic array is destroyed!\n"</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		DynamicArray(<span class="keyword">const</span> DynamicArray&amp; rhs): _size(rhs.size()) &#123;</span><br><span class="line">				<span class="built_in">array</span> = <span class="keyword">new</span> T[_size];</span><br><span class="line">				<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size(); ++i) &#123;</span><br><span class="line">						<span class="built_in">array</span>[i] = rhs.<span class="built_in">array</span>[i];</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="built_in">cout</span> &lt;&lt; <span class="string">"Copy constructor: dynamic array is created!\n"</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		DynamicArray&amp; <span class="keyword">operator</span>=(DynamicArray rhs) &#123;</span><br><span class="line">				<span class="built_in">cout</span> &lt;&lt; <span class="string">"Copy assignment operator is called\n"</span>;</span><br><span class="line">				swap(rhs);</span><br><span class="line">				<span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">swap</span><span class="params">(DynamicArray&amp; rhs)</span> </span>&#123;</span><br><span class="line">				<span class="keyword">this</span>-&gt;_size = rhs.size();</span><br><span class="line">				<span class="keyword">this</span>-&gt;<span class="built_in">array</span> = <span class="keyword">new</span> T[rhs.size()];</span><br><span class="line">				<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; rhs._size; ++i) &#123;</span><br><span class="line">						<span class="built_in">array</span>[i] = rhs.<span class="built_in">array</span>[i];</span><br><span class="line">				&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		T&amp; <span class="keyword">operator</span>[] (<span class="keyword">int</span> index) &#123;</span><br><span class="line">				<span class="comment">// 无边界检查</span></span><br><span class="line">				<span class="keyword">return</span> <span class="built_in">array</span>[index];</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">const</span> T&amp; <span class="keyword">operator</span>[] (<span class="keyword">int</span> index) <span class="keyword">const</span> &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="built_in">array</span>[index];</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="function"><span class="keyword">int</span> <span class="title">size</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> _size; &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">		T* <span class="built_in">array</span>;</span><br><span class="line">		<span class="keyword">int</span> _size;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">DynamicArray&lt;<span class="keyword">int</span>&gt; arrayFactor(<span class="keyword">int</span> size) &#123;</span><br><span class="line">		DynamicArray&lt;<span class="keyword">int</span>&gt; arr&#123; size &#125;;</span><br><span class="line">		<span class="keyword">return</span> arr;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		&#123;</span><br><span class="line">				DynamicArray&lt;<span class="keyword">int</span>&gt; arr = arrayFactor(<span class="number">10</span>);</span><br><span class="line">		&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">Constructor: dynamic array is created!</span></span><br><span class="line"><span class="comment">Destructor: dynamic array is destroyed!</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<p>上述代码中, 原本是在 Factor 函数中通过构造函数创建一个临时对象, 然后返回用 copy assignment 来初始化 arr. 其中 copy assignment 的实现方法是直接传值, 然后用 swap 函数交换参数的内容. 但是经clang优化成了 直接对 arr 用普通构造函数来创建一个动态数组…   //todo</p>
+<p>用VS跑出的结果如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Constructor: dynamic <span class="built_in">array</span> is created!</span><br><span class="line">Copy constructor: dynamic <span class="built_in">array</span> is created!</span><br><span class="line">Destructor: dynamic <span class="built_in">array</span> is destroyed!</span><br><span class="line">Destructor: dynamic <span class="built_in">array</span> is destroyed!</span><br></pre></td></tr></table></figure>
+
+<p>可以看到, 对象被创建了两次, 原本是先调用构造函数, 内部创建一个动态数组对象, 然后返回这个动态数组, 因为这个动态数组是内部的, 所以仍要再创建一个临时对象, 然后初始化arr的方式是调用拷贝构造函数, 但是编译器这里还是进行了优化, 直接拿内部的动态数组去初始化arr.最后两个在生命周期结束后被析构,但是最理想的情况是只申请一份内存, 然后转移这份内存, 因此就需要移动构造函数.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DynamicArray</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	...</span><br><span class="line">	DynamicArray(DynamicArray&amp;&amp; rhs): size(rhs._size), <span class="built_in">array</span>(rhs.<span class="built_in">array</span>) &#123;</span><br><span class="line">		rhs._size = <span class="number">0</span>;</span><br><span class="line">		rhs.<span class="built_in">array</span> = <span class="literal">nullptr</span>;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; <span class="string">"Move constructor: dynamic array is move!\n"</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	DynamicArray&amp; <span class="keyword">operator</span>=(DynamicArray&amp;&amp; rhs) &#123;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; <span class="string">"Move assignment operator is called\n"</span>;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span> == &amp;rhs) &#123;</span><br><span class="line">			<span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">delete</span>[] m_array;</span><br><span class="line">		m_size = rhs.m_array;</span><br><span class="line">		m_array = rhs.m_array;</span><br><span class="line">		rhs.m_size = <span class="number">0</span>;</span><br><span class="line">		rhs.m_array = <span class="literal">nullptr</span>;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">	&#125;</span><br><span class="line">		 </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Constructor: dynamic array is created!</span><br><span class="line">Move constructor: dynamic array is moved!</span><br><span class="line">Destructor: dynamic array is destroyed!</span><br><span class="line">Destructor: dynamic array is destroyed!</span><br></pre></td></tr></table></figure>
+
+<p>VS下跑出的结果就是调用了移动构造函数, 将申请的内存的控制权直接转移,调用了两次析构函数是因为临时对象印染存在, 只不过第一次析构的是个 nullptr  ,当然这对程序没什么影响.</p>
+
+
+<!--<a href="https://maochong.xin/posts/modern_cpp_learning.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>

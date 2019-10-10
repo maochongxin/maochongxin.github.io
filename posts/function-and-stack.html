@@ -1,0 +1,87 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>函数与栈</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">函数与栈</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2017年12月30日
+
+
+
+
+ </div>
+--->
+</div>
+
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#调用者调用被调函数"><span class="toc-text">调用者调用被调函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#被调函数开始执行"><span class="toc-text">被调函数开始执行</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#被调函数返回前的清理工作"><span class="toc-text">被调函数返回前的清理工作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#控制权返回到调用者"><span class="toc-text">控制权返回到调用者</span></a></li></ol>
+<p>在大多数的编程语言中，「函数」都是组织代码和组成程序的基本单位，在计算机的硬件中也有对函数调用的支持。</p>
+<p>程序执行时的控制流，也是以函数为基本单位来进行调度的，每一次的函数调用，也就是一次控制流的转移。</p>
+<p>函数可以自己调用包括自己(递归)在内的其他函数。函数的传值方式分为传值,传引用,传地址三种。通过穿参于返回值来表达函数执行的信息，传参用于调用者向被调用信息发送信息，后者则是函数向调用者返回信息。</p>
+<p>函数的调用是模拟栈的操作来执行的。最后调用的函数最先返回，一开始调用的函数最后返回。</p>
+<h2 id="调用者调用被调函数"><a href="#调用者调用被调函数" class="headerlink" title="调用者调用被调函数"></a>调用者调用被调函数</h2><p>栈上为单个函数所分配的区域，称之为栈帧。栈顶由一个栈顶指针来操作，栈顶指针在函数执行时不断变化的，因此还会有另一个帧指针指向栈底，函数通过栈指针来访问栈内的数据。栈指针和帧指针被保存在单独的寄存器上。</p>
+<p>函数执行时所定义的局部变量都将被分配在栈上，这些局部变量(和参数)决定了函数的执行状态。</p>
+<p>当函数调用另一个函数，首先保存寄存器的值。因为寄存器的空间被多个函数共享，为了防止被调函数覆盖寄存器，主调函数必须负责将部分寄存器的值保存在栈上。然后将传递给被调函数的参数插入栈中，在参数比较少的情况下，也可能直接使用寄存器来传递参数。然后再插入下一条指令的地址，即被调函数返回是要返回的地址。最后将控制权交给被调函数的首地址。</p>
+<h2 id="被调函数开始执行"><a href="#被调函数开始执行" class="headerlink" title="被调函数开始执行"></a>被调函数开始执行</h2><p>被调函数开始执行的同时也就意味着调用者的帧栈已经结束。被调函数先在栈上保存当前旧的帧指针，然后将帧指针或栈指针减1，即当前栈帧的第一项是旧的帧指针。然后被调函数也开始保存寄存器，调用者和被调函数分别保存哪些寄存器是有约定的。</p>
+<p>然后被调函数开始执行真正的代码，并通过帧指针来访问参数，参数在栈中的顺序是通过调用约定决定的。在函数执行的过程中，函数也可能在栈上创建和销毁局部变量，但始终遵循栈的后入先出原则。在函数执行将结束时，将返回值保存在特定的寄存器中。</p>
+<h2 id="被调函数返回前的清理工作"><a href="#被调函数返回前的清理工作" class="headerlink" title="被调函数返回前的清理工作"></a>被调函数返回前的清理工作</h2><p>当被调函数返回时，首先恢复以保存的寄存器的值，然后将帧指针赋值给栈指针，也就是丢弃当前栈帧除了已保存的旧帧指针的全部数据。然后从栈恢复旧的帧指针，至此被调函数完成全部的清理工作，帧指针指向调用者的栈帧头部，栈指针指向调用者栈帧的尾部。被调函数将控制权交给当前栈指针指向的返回地址。</p>
+<h2 id="控制权返回到调用者"><a href="#控制权返回到调用者" class="headerlink" title="控制权返回到调用者"></a>控制权返回到调用者</h2><p>然后轮到调用者弹出栈中的返回地址和参数，恢复寄存器的值，执行接下来的代码，被调函数的返回值在特定的寄存器中。</p>
+
+
+<!--<a href="https://maochong.xin/posts/function-and-stack.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,126 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>Rust才是最好的语言</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">Rust才是最好的语言</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2019年9月19日
+
+
+
+
+ </div>
+--->
+</div>
+
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#所有权系统-Ownership"><span class="toc-text">所有权系统(Ownership)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#todo-续更"><span class="toc-text">// todo 续更</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#结尾"><span class="toc-text">结尾</span></a></li></ol>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>大约是大一下学期,我开始接触到了 C++ 这门语言, 本着大家都学 Java, 我学 C++ 才比较酷的心态开始了后来的 C++ 入门之旅. 在经历了 《C++ Primer 5th》, 《Thinking in C++》,《STL 源码剖析》, “Effective 全家桶” 的摧残后, 我才意识到到这个时候我才算是正式开始了 C++ 的入门. </p>
+<p>第一次听说 Rust 这门语言是在大一下一次与浩然巨佬的交流中, 当时我已经确立了要踩 C++ 这个深坑, 浩然巨佬就在那个时候给我推荐了这门语言. 我在网上搜索过一番后对所谓「Ownership」,「Zero cost abstraction」 等特性并不感冒, 也正如上面所说的, 我当时对 C++ 的认识仅仅是「速度快」,「多范式」,「难」,而日常的 toy code 也没有办法认识到 C++ 真正的痛点——<strong>资源管理</strong>, 而在学习 Modern C++ 的时候, 我发现C++标准中更是付出了很大的努力来改善这一点.</p>
+<p>当我在读 STL 源码的时候,我对 <strong>萃取器(Traits)</strong> 的实现产生了浓厚的兴趣, 然后写了一篇<a href="https://maochong.xin/posts/traits.html">博客</a>, 第二天浩然巨佬找到了我, 给我补充了一些关于 C++ 中 Traits 技术的不足,同时再次给我安利了 Rust 中的 Traits,恰逢前些日子我又偶然间发现了一个 THU 大佬的 「从零开始写 OS」其中采用的语言正是 Rust, 就这样, 我开始了 Rust 的学习之旅.</p>
+<blockquote>
+<p>近期看了太多侯捷老师的作品, 对于他的翻译风格甚是喜欢, 所以本文采取类似的方式写作,具体观点见<a href="http://jjhou.boolan.com/article99-14.htm" target="_blank" rel="noopener">技術引導乎 文化傳承乎</a>.</p>
+</blockquote>
+<pre><code>可能大量存在的英文术语:
+trivial: 没用的
+memberwise: 对每一个 member 施以
+bitwise: 对每一个 bit 施以
+sematics: 语义</code></pre><h2 id="所有权系统-Ownership"><a href="#所有权系统-Ownership" class="headerlink" title="所有权系统(Ownership)"></a>所有权系统(Ownership)</h2><p>所有权（系统）是 Rust 最核心的功能,其令 Rust 无需GC（Garbage Collector）即可保障内存安全. 在看到这里的讲解的时候, 我不由自主的拿 C++ 的 RAII 思想来做比较, 很明显 C++ 中的存在的例如 to_string().c_str() 导致的问题,在 Rust 中直接被编译器给 ban 掉了~</p>
+<p>这里首先需要讨论资源转移的问题(方式为深浅拷贝). 这个我认为最好的区别实践是在 C++ 的 default copy constructor 的编译器生成策略上: 当用户没有显示的写出 copy constructor 时, C++ 编译器会在<strong>必要的时候</strong>自动生成一个. 而生成的 copy constructor 需要针对一些问题(例如:「class 内的某个成员对象的class 声明中存在一个 copy constructor」,「class 继承自一个 base class, 而后者存在一个 copy constructor」, 「class 声明了 virtual functions」,「class 的派生自一个继承链, 其中存在 virtual functions」)来决定 生成的 copy constructor 是通过 bitwise copy semantics 还是 memberwise copy semantics. 从条件中也可以看出, 如果存在不能简单进行浅拷贝的情况, 就需要特殊处理.</p>
+<p>上述说到深浅拷贝的问题主要是为了接下来说一下 Rust 中字符串的操作. </p>
+<p>例如我写出下面的代码:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> str1 = <span class="built_in">String</span>::from(<span class="string">"Hello"</span>);</span><br><span class="line"><span class="keyword">let</span> str2 = str1;</span><br></pre></td></tr></table></figure>
+
+<p>其中第一条发生的事是从栈上开辟一段空间,然后假设这段空间里有三个成员, 一个是指向堆中一块内存的指针ptr, 一个用来表示这个字符串的长度len, 另一个用来表示字符串的容量capacity.</p>
+<p>第二条的语义是将 str1 赋给 str2, str1 的数据被赋值了, 但是这里进行的是浅拷贝, 并不会拷贝 *str1.ptr 的内容, 仅仅是将 ptr 的值, len 的值, capacity 的值进行了拷贝. 这里可能是考虑到性能的问题, 因为如果 堆上的数据很大,那么复制的代价将会很高.</p>
+<p>这样就会出现这样的问题, 两个 String 对象的 ptr 指向了同一块堆内存, 如果其中一个 进行了 release, 那么剩下的可能会导致访问这片已经被释放的内存.</p>
+<p>或者还有一个问题,Rust每个指针和引用都有一个 lifetime (对比C++ RAII思想),两个对象在离开了他们的作用域(假设在同一个), 双双调用 destructor 会导致二次释放内存造成内存污染.</p>
+<p>但是上述的问题在 Rust 中并不会出现, 因为在第一条语句进行了赋值的同时, str1 中的 ptr 就已经失效了, 也就是资源控制权被转交给了 str2, 这时候再尝试访问 str1 的话 编译时会出现如下错误:</p>
+<pre><code class="Rust">error[E0382]: borrow of moved value: `str1`
+ --&gt; src/main.rs:<span class="number">6</span>:<span class="number">19</span>
+  |
+<span class="number">3</span> |     <span class="keyword">let</span> str1 = <span class="built_in">String</span>::from(<span class="string">"Hello"</span>);
+  |         ---- move occurs because `str1` has type `std::string::String`, which does not implement the `Copy` trait
+<span class="number">4</span> |     <span class="keyword">let</span> str2 = str1;
+  |                ---- value moved here
+<span class="number">5</span> |
+<span class="number">6</span> |     <span class="built_in">println!</span>(<span class="string">"{}"</span>,str1);
+  |                   ^^^^ value borrowed here after <span class="keyword">move</span>
+</code></pre>
+<p>因为 Rust 禁止访问无效的引用. </p>
+<p>但并不是所有的资源都会进行所有权的转移, 也就像 str2 的成员被赋值时说的, 已知编译时已知大小的类型的变量会被存储在栈上, 这里就是简单的 copy 行为.</p>
+<p>而在 C++ 的中对于所有权唯一持有者的使用方式是 scoped-ptr 和 auto-ptr. 两者的区别是前者的所有权是从一而终的, 后者可以自由的转交资源,同时保证所有权的唯一,但是由于 auto-ptr 使用的 copy semantics 会导致将原指针置为 NULL,在某些情境下这是不希望看到的, 所以在 C++11 中已经由使用 move semantics 并禁用了 copy 的 unique-ptr 所替代.</p>
+<p><a href="https://github.com/maochongxin/smart_ptr/blob/master/src/unique_ptr.h" target="_blank" rel="noopener">作者实现的unique_ptr</a></p>
+<h2 id="todo-续更"><a href="#todo-续更" class="headerlink" title="// todo 续更"></a>// todo 续更</h2><h2 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h2><p>必要的声明: </p>
+<ol>
+<li>本文仅作为Rust学习笔记, 仅供自娱自乐.</li>
+<li>作者水平有限, 部分观点可能并不全面或者存在错误,欢迎指正.</li>
+</ol>
+<p>教材:</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/book/title-page.html" target="_blank" rel="noopener">《The Rust Programming》</a></li>
+</ul>
+<p>参考:</p>
+<ul>
+<li>《深度探索 C++ 对象模型》</li>
+<li>《Effective C++》</li>
+</ul>
+
+
+<!--<a href="https://maochong.xin/posts/rust_is_the_best_language.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>

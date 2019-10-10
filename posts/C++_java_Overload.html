@@ -1,0 +1,130 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>C++和Java的重载</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">C++和Java的重载</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2019年9月19日
+
+
+
+
+ </div>
+--->
+</div>
+
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#C-swap函数"><span class="toc-text">C++swap函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Java的add函数"><span class="toc-text">Java的add函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#C-运算符重载"><span class="toc-text">C++运算符重载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一般运算符重载"><span class="toc-text">一般运算符重载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#关系运算符"><span class="toc-text">关系运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#逻辑运算符"><span class="toc-text">逻辑运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#单目运算符"><span class="toc-text">单目运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#自增自减运算符"><span class="toc-text">自增自减运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#位运算符"><span class="toc-text">位运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#赋值运算符"><span class="toc-text">赋值运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内存运算符"><span class="toc-text">内存运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#特殊运算符"><span class="toc-text">特殊运算符</span></a></li></ol>
+<p>C++中可以进行函数重载和运算符重载;Java中则只能进行方法的重载.</p>
+<p>C++函数重载与Java的方法重载一样,是需要满足<strong>参数数目</strong>和<strong>参数类型</strong>两个因素中一个以上不同.</p>
+<p>例如:</p>
+<h2 id="C-swap函数"><a href="#C-swap函数" class="headerlink" title="C++swap函数"></a>C++swap函数</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">swap</span><span class="params">(<span class="keyword">int</span>&amp; a,<span class="keyword">int</span>&amp; b)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> t = a;</span><br><span class="line">	a = b;</span><br><span class="line">	b = t;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">swap</span><span class="params">(<span class="keyword">float</span>&amp; a,<span class="keyword">float</span>&amp; b)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">float</span> t = a;</span><br><span class="line">	a = b;</span><br><span class="line">	b = t;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">swap</span><span class="params">(<span class="keyword">char</span>&amp; a,<span class="keyword">char</span>&amp; b)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">char</span> t = a;</span><br><span class="line">	a = b;</span><br><span class="line">	b = t;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Java的add函数"><a href="#Java的add函数" class="headerlink" title="Java的add函数"></a>Java的add函数</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a,<span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> a + b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">double</span> <span class="title">add</span><span class="params">(<span class="keyword">double</span> a,<span class="keyword">double</span> b)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> a + b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">add</span><span class="params">(String a,String b)</span> </span>&#123;	<span class="keyword">return</span> a + b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="C-运算符重载"><a href="#C-运算符重载" class="headerlink" title="C++运算符重载"></a><strong>C++运算符重载</strong></h2><p>注意事项:</p>
+<ul>
+<li><p>除了类属关系运算符”.“、成员指针运算符”.*“、作用域运算符”::“、sizeof运算符和三目运算符”?:“以外，C++中的所有运算符都可以重载</p>
+</li>
+<li><p>重载运算符限制在C++语言中已有的运算符范围内的允许重载的运算符之中，不能创建新的运算符</p>
+</li>
+<li><p>运算符重载实质上是函数重载，因此编译程序对运算符重载的选择，遵循函数重载的选择原则</p>
+</li>
+<li><p>重载之后的运算符不能改变运算符的优先级和结合性，也不能改变运算符操作数的个数及语法结构</p>
+</li>
+<li><p>运算符重载是针对新类型数据的实际需要对原有运算符进行的适当的改造，重载的功能应当与原有功能相类似，避免没有目的地使用重载运算符</p>
+</li>
+<li><p>运算符重载不能改变该运算符用于内部类型对象的含义;它只能和用户自定义类型的对象一起使用，或者用于用户自定义类型的对象和内部类型的对象混合使用时</p>
+</li>
+<li><p>=,(),[],-&gt;不能重载为类的友元函数.</p>
+</li>
+<li><p>若一个运算符的操作需要修改对象的状态，选择重载为成员函数较好</p>
+</li>
+<li><p>若运算符所需的操作数（尤其是第一个操作数）希望有隐式类型转换，则只能选用友元函数</p>
+</li>
+<li><p>当运算符函数是一个成员函数时，最左边的操作数（或者只有最左边的操作数）必须是运算符类的一个类对象（或者是对该类对象的引用. 如果左边的操作数必须是一个不同类的对象，或者是一个内部类型的对象，该运算符函数必须作为一个友元函数来实现.</p>
+</li>
+<li><p>当需要重载运算符具有可交换性时，选择重载为友元函数</p>
+</li>
+</ul>
+<h2 id="一般运算符重载"><a href="#一般运算符重载" class="headerlink" title="一般运算符重载"></a>一般运算符重载</h2><p>在进行对象之间的运算时，程序会调用与运算符相对应的函数进行处理，所以运算符重载有两种方式：成员函数和友元函数。成员函数的形式比较简单，就是在类里面定义了一个与操作符相关的函数。友元函数因为没有this指针，所以形参会多一个。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span> &#123;</span></span><br><span class="line">	<span class="keyword">int</span> data;</span><br><span class="line"><span class="keyword">public</span>: </span><br><span class="line">	Test(<span class="keyword">int</span> d):data(d) &#123;&#125;</span><br><span class="line">	Test <span class="keyword">operator</span>+(Test&amp;);</span><br><span class="line">	Test <span class="keyword">operator</span>-(Test&amp;);</span><br><span class="line">	Test <span class="keyword">operator</span>*(Test&amp;);</span><br><span class="line">	Test <span class="keyword">operator</span>/(Test&amp;);</span><br><span class="line">	Test <span class="keyword">operator</span>%(Test&amp;);</span><br><span class="line">	<span class="keyword">friend</span> Test <span class="keyword">operator</span>+(Test&amp;,Test&amp;);</span><br><span class="line">	<span class="keyword">friend</span> Test <span class="keyword">operator</span>-(Test&amp;,Test&amp;);</span><br><span class="line">	<span class="keyword">friend</span> Test <span class="keyword">operator</span>*(Test&amp;,Test&amp;);</span><br><span class="line">	<span class="keyword">friend</span> Test <span class="keyword">operator</span>/(Test&amp;,Test&amp;);</span><br><span class="line">	<span class="keyword">friend</span> Test <span class="keyword">operator</span>%(Test&amp;,Test&amp;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Test Test::<span class="keyword">operator</span>+(Test&amp; a) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(data + a.data);</span><br><span class="line">&#125;</span><br><span class="line">Test Test::<span class="keyword">operator</span>-(Test&amp; a) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(data - a.data);</span><br><span class="line">&#125;</span><br><span class="line">Test Test::<span class="keyword">operator</span>*(Test&amp; a) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(data * a.data);</span><br><span class="line">&#125;</span><br><span class="line">Test Test::<span class="keyword">operator</span>/(Test&amp; a) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(data / a.data);</span><br><span class="line">&#125;</span><br><span class="line">Test Test::<span class="keyword">operator</span>%(Test&amp; a) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(data % a.data);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Test <span class="keyword">operator</span>+(Test&amp; a1,Test&amp; a2) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(a1.data + a2.data);</span><br><span class="line">&#125;</span><br><span class="line">Test <span class="keyword">operator</span>-(Test&amp; a1,Test&amp; a2) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(a1.data - a2.data);</span><br><span class="line">&#125;</span><br><span class="line">Test <span class="keyword">operator</span>*(Test&amp; a1,Test&amp; a2) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(a1.data * a2.data);</span><br><span class="line">&#125;</span><br><span class="line">Test <span class="keyword">operator</span>/(Test&amp; a1,Test&amp; a2) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(a1.data / a2.data);</span><br><span class="line">&#125;</span><br><span class="line">Test <span class="keyword">operator</span>%(Test&amp; a1,Test&amp; a2) &#123;</span><br><span class="line">	<span class="keyword">return</span> Test(a1.data % a2.data);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="关系运算符"><a href="#关系运算符" class="headerlink" title="关系运算符"></a>关系运算符</h2><p>函数体类似上述一般运算符的重载.所以只写出成员函数声明.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>== (<span class="keyword">const</span> Test&amp;);</span><br><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>!= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>&lt; (<span class="keyword">const</span> Test&amp;);</span><br><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>&lt;= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>&gt; (<span class="keyword">const</span> Test&amp;);</span><br><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>&gt;= (<span class="keyword">const</span> Test&amp;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>|| (<span class="keyword">const</span> Test&amp;);</span><br><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>&amp;&amp; (<span class="keyword">const</span> Test&amp;);</span><br><span class="line"><span class="keyword">bool</span> <span class="keyword">operator</span>! ();</span><br></pre></td></tr></table></figure>
+
+<h2 id="单目运算符"><a href="#单目运算符" class="headerlink" title="单目运算符"></a>单目运算符</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Test&amp; <span class="keyword">operator</span>+ ();</span><br><span class="line">Test&amp; <span class="keyword">operator</span>- ();</span><br><span class="line">Test&amp; <span class="keyword">operator</span>&amp; ();</span><br><span class="line">Test&amp; <span class="keyword">operator</span>* ();</span><br></pre></td></tr></table></figure>
+
+<h2 id="自增自减运算符"><a href="#自增自减运算符" class="headerlink" title="自增自减运算符"></a>自增自减运算符</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Test&amp; <span class="keyword">operator</span>++();</span><br><span class="line">Test&amp; <span class="keyword">operator</span>--(<span class="keyword">int</span>);<span class="comment">//前置后置都可重载</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="位运算符"><a href="#位运算符" class="headerlink" title="位运算符"></a>位运算符</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Test <span class="keyword">operator</span>| (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test <span class="keyword">operator</span>&amp; (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test <span class="keyword">operator</span>^ (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test <span class="keyword">operator</span>&lt;&lt; (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test <span class="keyword">operator</span>&gt;&gt; (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test <span class="keyword">operator</span>~ (<span class="keyword">const</span> Test&amp;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="赋值运算符"><a href="#赋值运算符" class="headerlink" title="赋值运算符"></a>赋值运算符</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Test&amp; <span class="keyword">operator</span>+= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>-= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>*= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>/= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>%= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>&amp;= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>|= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>^= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>&lt;&lt;= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line">Test&amp; <span class="keyword">operator</span>&gt;&gt;= (<span class="keyword">const</span> Test&amp;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="内存运算符"><a href="#内存运算符" class="headerlink" title="内存运算符"></a>内存运算符</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span>* <span class="keyword">operator</span> <span class="title">new</span><span class="params">(<span class="keyword">size_t</span> size)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="keyword">operator</span> <span class="title">new</span><span class="params">(<span class="keyword">size_t</span> size,<span class="keyword">int</span> i)</span></span>;</span><br><span class="line"><span class="keyword">void</span>* <span class="keyword">operator</span> <span class="keyword">new</span>[](<span class="keyword">size_t</span> size);</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="keyword">operator</span> <span class="title">delete</span><span class="params">(<span class="keyword">void</span>* p)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="keyword">operator</span> <span class="title">delete</span><span class="params">(<span class="keyword">void</span>* p,<span class="keyword">int</span> i,<span class="keyword">int</span> j)</span></span>;</span><br><span class="line"><span class="keyword">void</span> <span class="keyword">operator</span> <span class="keyword">delete</span>[](<span class="keyword">void</span>* p);</span><br></pre></td></tr></table></figure>
+
+<h2 id="特殊运算符"><a href="#特殊运算符" class="headerlink" title="特殊运算符"></a>特殊运算符</h2><p>以上的运算符都可以用成员函数或者友元函数,但下面提到的运算符的重载之能是成员函数.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Test&amp; <span class="keyword">operator</span>= (<span class="keyword">const</span> Test&amp;);</span><br><span class="line"><span class="keyword">char</span> <span class="keyword">operator</span>[] (<span class="keyword">int</span> i);</span><br><span class="line"><span class="function"><span class="keyword">const</span> <span class="keyword">char</span>* <span class="title">opertaor</span><span class="params">()</span> <span class="params">()</span></span>;</span><br><span class="line">T <span class="keyword">operator</span> -&gt; ();</span><br><span class="line"></span><br><span class="line"><span class="keyword">operator</span> <span class="keyword">char</span>* () <span class="keyword">const</span>;</span><br><span class="line"><span class="function"><span class="keyword">operator</span> <span class="keyword">const</span> <span class="title">char</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">operator</span> <span class="keyword">short</span> <span class="title">int</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">operator</span> <span class="keyword">long</span> <span class="title">long</span> <span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">.</span><br><span class="line">.</span><br><span class="line">.</span><br></pre></td></tr></table></figure>
+
+<p>流运算符只能用友元函数重载.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">friend</span> <span class="keyword">inline</span> ostream&amp; <span class="keyword">operator</span>&lt;&lt; (ostream&amp;,Test&amp;);</span><br><span class="line"><span class="keyword">friend</span> <span class="keyword">inline</span> istream&amp; <span class="keyword">operator</span>&gt;&gt; (istream&amp;,Test&amp;);</span><br></pre></td></tr></table></figure>
+
+<!--<a href="https://maochong.xin/posts/C++_java_Overload.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>

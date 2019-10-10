@@ -1,0 +1,152 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>关于字符串与指针</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">关于字符串与指针</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2018年2月18日
+
+
+
+
+ </div>
+--->
+</div>
+
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#C-C-程序占用的内存分类"><span class="toc-text">C/C++程序占用的内存分类:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#申请方式"><span class="toc-text">申请方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#获取方式"><span class="toc-text">获取方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#char-与char-a"><span class="toc-text">char **  与char  * a[ ] </span></a></li></ol>
+<blockquote>
+<p>过去有人曾对我说，“一个人爱上小溪，是因为没有见过大海。”而如今我终于可以说，“我已见过银河，但我仍只爱你一颗星。”</p>
+</blockquote>
+<p>C语言程序中声明字符串有两种方式</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> *s = <span class="string">"string"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> s[] = <span class="string">"string"</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这两种方式看起来都是声明了一个内容为string的字符串，其实从内存的角度来看是有区别的。</p>
+<p>当你运行</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*s = <span class="string">'a'</span>;</span><br></pre></td></tr></table></figure>
+
+<p>时，第一个语句的程序就死掉了，第二个语句的程序却可以正确运行。</p>
+<h2 id="C-C-程序占用的内存分类"><a href="#C-C-程序占用的内存分类" class="headerlink" title="C/C++程序占用的内存分类:"></a>C/C++程序占用的内存分类:</h2><blockquote>
+<p>1、栈区（stack）—由编译器自动分配释放，存放函数的参数值，局部变量的值等。其操作方式类似于数据结构中的栈。</p>
+</blockquote>
+<blockquote>
+<p>2、堆区（heap）—一般由程序员分配释放，若程序员不释放，程序结束时可能由OS回收。注意它与数据结构中的堆是两回事，分配方式类似于链表。</p>
+<p>3、全局区（静态区）（static）—全局变量和静态变量的存储是放在一块的，初始化的全局变量和静态变量在一块区域，未初始化的全局变量和未初始化的静态变量在相邻的另一块区域。程序结束后由系统释放。</p>
+</blockquote>
+<blockquote>
+<p>4、文字常量区—常量字符串就是放在这里的。程序结束后由系统释放。</p>
+</blockquote>
+<blockquote>
+<p>5、程序代码区</p>
+</blockquote>
+<p>解释一下：</p>
+<pre><code>我们在程序中所声明的全局变量和静态变量(static修饰)的就是存放在全局区。
+
+动态分配的变量则存放在堆区。
+
+字符串常量储存在文字常量区。
+
+而一些普通的变量比如函数参数，指针之类的也就存在于栈区。</code></pre><h2 id="申请方式"><a href="#申请方式" class="headerlink" title="申请方式"></a>申请方式</h2><blockquote>
+<p>栈(stack):<br>由系统自动分配。例如，声明在函数中一个局部变量int b;系统自动在栈中为b开辟空间</p>
+</blockquote>
+<blockquote>
+<p>堆(heap):<br>需要程序员自己申请，并指明大小，在c中malloc函数</p>
+</blockquote>
+<blockquote>
+<p>如p1=(char<em>)malloc(10);<br>在C++中用new运算符<br>如p2=(char</em>)malloc(10);<br>但是注意p1、p2本身是在栈中的</p>
+</blockquote>
+<h2 id="获取方式"><a href="#获取方式" class="headerlink" title="获取方式"></a>获取方式</h2><p>char s1[]=”aaaaaaaaaaaaaaa”;</p>
+<p>char *s2=”bbbbbbbbbbbbbbbbb”;</p>
+<p>aaaaaaaaaaa是在运行时刻赋值的；</p>
+<p>而bbbbbbbbbbb是在编译时就确定的；</p>
+<blockquote>
+<p>char *c1 = “abc”;实际上先是在文字常量区分配了一块内存放”abc”,然后在栈上分配一地址给c1并指向<br>这块地址，然后改变常量”abc”自然会崩溃</p>
+</blockquote>
+<blockquote>
+<p>然而char c2[] = “abc”,实际上abc分配内存的地方和上者并不一样，可以从</p>
+<p>4199056</p>
+<p>2293624 看出，完全是两块地方，推断4199056处于常量区，而2293624处于栈区</p>
+<p>2293628</p>
+<p>2293624</p>
+<p>2293620 这段输出看出三个指针分配的区域为栈区，而且是从高地址到低地址</p>
+<p>2293620 4199056 abc 看出编译器将c3优化指向常量区的”abc”</p>
+</blockquote>
+<h2 id="char-与char-a"><a href="#char-与char-a" class="headerlink" title="char **  与char  * a[ ] "></a>char **  与char  * a[ ] </h2><p>由于[ ]的优先级高于* 所以a先和 [ ]结合，它还是一个数组，数组中的元素才是char * ，前面讲到char * 是一个变量，保存的是字符串的地址。</p>
+<p>那么看一下这个语句</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> *arr[] = &#123;<span class="string">"aaaaa"</span>,<span class="string">"bbbbb"</span>,<span class="string">"ccccc"</span>&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>如果你输出sizeof(arr)的话答案并不是6 * 3 = 18,而是3 * 4 = 12;</p>
+<p>因为数组arr中的元素是char *指针，指针占四个字节。</p>
+<p>如果我在写一个</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> **s  = arr;</span><br></pre></td></tr></table></figure>
+
+<p>运行会发现是正确的，因为arr也就是&amp;arr[0]。s则是指向char *的指针。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">printf</span>(<span class="string">"%s"</span>,*s);  </span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"%s"</span>,arr[<span class="number">0</span>]);  </span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"%s"</span>,*arr);</span><br></pre></td></tr></table></figure>
+
+<p>由此上面三条语句的输出结果是一样的。</p>
+<p>还有一个问题</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> **s;</span><br><span class="line">*s = <span class="string">"hallo"</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这个语句也会导致程序崩溃。</p>
+<p>因为s是一个无效的指针，*s的操作是UB，所以在执行上述语句需要这么做</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> **s;</span><br><span class="line">s = (<span class="keyword">char</span> **) <span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">char</span>**));</span><br><span class="line">*s = <span class="string">"Hallo"</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<!--<a href="https://maochong.xin/posts/string_pointer.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>
