@@ -1,7 +1,7 @@
 <html>
 <head><meta name="generator" content="Hexo 3.9.0">
 	
-	<title></title>
+	<title>C++ RTTI库设计</title>
 	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
 
     <meta https-equiv="content-type" content="text/html; charset=utf-8">
@@ -32,7 +32,7 @@
 <body>
 
 
-<h2 class="title"></h2>
+<h2 class="title">C++ RTTI库设计</h2>
 <!---
 <div style="text-align:center;margin-top: -10px;">
 <div class="article-category">
@@ -45,8 +45,8 @@
 --->
 </div>
 
-<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C-RTTI库设计"><span class="toc-text">C++ RTTI库设计</span></a></li></ol>
-<h1 id="C-RTTI库设计"><a href="#C-RTTI库设计" class="headerlink" title="C++ RTTI库设计"></a>C++ RTTI库设计</h1><p>RTTI 是 Runtime type information 的缩写, 是指在运行时保存对象的类型信息, 一般是用来描述C++的一种特性.  C++本身提供了 dynamic_cast 和 typeid 运算符来实现运行时类型识别, 但是 dynamic_cast的 效率往往较低, 所以实现了一个较高性能的 RTTI 库.</p>
+
+<p>RTTI 是 Runtime type information 的缩写, 是指在运行时保存对象的类型信息, 一般是用来描述C++的一种特性.  C++本身提供了 dynamic_cast 和 typeid 运算符来实现运行时类型识别, 但是 dynamic_cast的 效率往往较低, 所以实现了一个较高性能的 RTTI 库.</p>
 <p>dynamic_cast的“运行时类型的转换匹配”，是通过维护一棵由type_info类型对象作为节点的类型继承关系的树，遍历这棵继承树来确定一个待转换的对象的类型和目标类型之间是否存在 “is-a” 关系. </p>
 <p>于是我们的思路就是参考dynamic_cast的思路, 通过保存在继承链的类型信息, 然后线性查找来判断是否存在 “is-a” 关系. </p>
 <p>根据 C++ 继承初始化顺序的特性, 我们可以通过让继承链上的每一个类都继承我们的协议类, 在协议类中保存每个类型的信息, 那么用什么来表示一类类型呢? 模版类 + 静态成员, 模版类实例化后每个特化的类都会持有同一个针对该类型特化的类的静态成员变量, 我们可以用该静态成员变量的地址来表示该类型. </p>
