@@ -46,9 +46,6 @@
 </div>
 
 
-<blockquote>
-<p>我妈答应我,等我精通C++就带我去村东头老王家提亲.</p>
-</blockquote>
 <p>1.引用全局作用域中的变量,函数等</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> a = <span class="number">2</span>;</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; a &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;	<span class="comment">//函数作用域中的局部变量</span></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; ::a &lt;&lt; <span class="built_in">std</span>:: <span class="built_in">endl</span>;	<span class="comment">//全局作用域的全局变量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 

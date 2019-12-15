@@ -1,0 +1,89 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>std::cout 与 printf 的区别</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">std::cout 与 printf 的区别</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2019年12月15日
+
+
+
+
+ </div>
+--->
+</div>
+
+
+<p>原答于<a href="https://www.zhihu.com/question/357208801/answer/905489671" target="_blank" rel="noopener">知乎</a></p>
+<p>二者的定义官方说法是这样的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">std::cout:</span><br><span class="line"></span><br><span class="line">The global objects std::cout and std::wcout control output to a stream buffer of implementation-defined type (derived from std::streambuf),</span><br><span class="line"> associated with the standard C output stream stdout.</span><br><span class="line"></span><br><span class="line">printf:</span><br><span class="line"></span><br><span class="line">Loads the data from the given locations, converts them to character string equivalents and writes the results to a variety of sinks.</span><br></pre></td></tr></table></figure>
+
+<p>好的, 放完洋屁翻译一下:</p>
+<p>std::cout, std::cin 是全局对象, operator &lt;&lt; 和 operator &gt;&gt; 是流运算符, std::cout 重载了 &lt;&lt; 运算符, std::cin 重载了 &gt;&gt; 运算符.<br>printf 是函数.</p>
+<p>看到上面的回答提到了二者混用问题, 说 printf 速度比 cout 要快, 这个其实是不对的. 我们看上面std::cout 解释的最后一句, std::cout 是默认与C标准输出stdout 同步的(std::cin 同理), 所以会有额外的运算. C++ 提供了 std::ios_base::sync_with_stdio 这样一个函数来设置是否同步, 但是关闭了同步之后可能会出现错误.</p>
+<p>然而, 我们在看 cin 的说明,</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Oncestd::cinis constructed, std::cin.tie() returns &amp;std::cout, </span><br><span class="line"></span><br><span class="line">and likewise, std::wcin.tie() returns &amp;std::wcout. </span><br><span class="line"></span><br><span class="line">This means that any formatted input operation onstd::cinforces a call to std::cout.flush() if any characters are pending for output.</span><br></pre></td></tr></table></figure>
+
+<p>cin 被预设绑定了 cout, 被绑定的 ostream 在 istream 输入会被 flush, 标准库提供了 std::cin.tie()设置绑定对象.</p>
+<p>说到这了, 顺便说一下 std::endl 这个东西, 可以说等价于 &lt;&lt; ‘\n’ &lt;&lt; flush, 所做的事情就是清空缓冲区并输出到输出流. 上面说到了 std::cout 会把输出放到一个叫缓冲区(stream buffer) 里, 直到缓冲区满了才会清空缓冲区并把字串输出到 stdout 之类的输出流, 这也就是为什么关闭了缓冲区可能会出现错误. 那么说到这里也就整明白了, 如果频繁使用 std::endl 来做换行输出, 那便是破坏了 std::cout 本身的类似于优化的操作, 也就导致了通常认为 std::cout 的速度比 printf慢.</p>
+<p>这也就很好的解释 leetcode 中经常看到的一段加速代码:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">int</span> _ = [] </span><br><span class="line">&#123;</span><br><span class="line">    ios::sync_with_stdio(<span class="literal">false</span>);</span><br><span class="line">    <span class="built_in">cin</span>.tie(<span class="literal">nullptr</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125; ();</span><br></pre></td></tr></table></figure>
+
+<!--<a href="https://maochong.xin/posts/diff_between_stdcout_printf.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>
