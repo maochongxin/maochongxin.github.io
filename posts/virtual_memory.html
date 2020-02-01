@@ -45,9 +45,9 @@
 --->
 </div>
 
-<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#存储器层次结构"><span class="toc-text">存储器层次结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#高速缓存存储器"><span class="toc-text">高速缓存存储器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#高速缓存的分类"><span class="toc-text">高速缓存的分类</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#直接映射高速缓存"><span class="toc-text">直接映射高速缓存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#组相连高速缓存"><span class="toc-text">组相连高速缓存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#全相连高速缓存"><span class="toc-text">全相连高速缓存</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#关于高速缓存写的问题"><span class="toc-text">关于高速缓存写的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#高速缓存参数的性能影响"><span class="toc-text">高速缓存参数的性能影响</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#编写高速缓存友好的代码"><span class="toc-text">编写高速缓存友好的代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#虚拟内存"><span class="toc-text">虚拟内存</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#物理和虚拟寻址的概念"><span class="toc-text">物理和虚拟寻址的概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#地址空间"><span class="toc-text">地址空间</span></a></li></ol></li></ol>
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#存储器层次结构"><span class="toc-text">存储器层次结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#高速缓存存储器"><span class="toc-text">高速缓存存储器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#高速缓存的分类"><span class="toc-text">高速缓存的分类</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#直接映射高速缓存"><span class="toc-text">直接映射高速缓存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#组相连高速缓存"><span class="toc-text">组相连高速缓存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#全相连高速缓存"><span class="toc-text">全相连高速缓存</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#关于高速缓存写的问题"><span class="toc-text">关于高速缓存写的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#高速缓存参数的性能影响"><span class="toc-text">高速缓存参数的性能影响</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#编写高速缓存友好的代码"><span class="toc-text">编写高速缓存友好的代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#虚拟内存"><span class="toc-text">虚拟内存</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#物理和虚拟寻址的概念"><span class="toc-text">物理和虚拟寻址的概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#地址空间"><span class="toc-text">地址空间</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#虚拟内存-1"><span class="toc-text">虚拟内存</span></a></li></ol></li></ol>
 <p>下学期看完了OSTEP这本书, 但是感觉对于虚拟内存以及其相关的程序加载机制一直有些模糊, 然后开始做CSAPP的malloc lab, 发现这本书对于虚拟内存相关的知识讲的比较全面, 于是参考CSAPP的思路来整理一下相关的知识.</p>
-<h2 id="存储器层次结构"><a href="#存储器层次结构" class="headerlink" title="存储器层次结构"></a>存储器层次结构</h2><p>由于不同层次单位容量造价不同以及他们之间访问速度的差异, 以及良好软件的局部性的存在, 这两种软件和硬件的性质完美互补使得存储器层次结构产生. </p>
+<h2 id="存储器层次结构"><a href="#存储器层次结构" class="headerlink" title="存储器层次结构"></a>存储器层次结构</h2><p>由于不同层次单位容量造价不同以及他们之间访问速度的差异, 以及良好软件的局部性的存在, 这两种软件和硬件的性质完美互补使得存储器层次结构产生.</p>
 <p>存储器层次结构的核心思想是: 对于k, 位于k层的更快更小的存储设备作为k + 1层的更大更慢设备的缓存(caching), k + 1层的存储器被分为连续的数据对象组块(chunk), 称之为块(block). 类似的, 第k层的存储器被划分成同样大小的块的集合. 在<strong>任何时刻, 第k层的缓存包括第k + 1层的一个子集的副本</strong>.</p>
 <h3 id="高速缓存存储器"><a href="#高速缓存存储器" class="headerlink" title="高速缓存存储器"></a>高速缓存存储器</h3><p>通用的高速缓存存储器结构可以用元组(S,E,B,m)表示. 含义是</p>
 <ul>
@@ -57,9 +57,9 @@
 <li>每一行有 B = 2 ^ b 字节数据</li>
 <li>缓存的容量 C = S * E * B</li>
 </ul>
-<p>其中 S 和 E 将存储器地址分为三部分: s 位组索引, 剩下 b 位块偏移, 还有 t = m - s - b 位标记位. </p>
+<p>其中 S 和 E 将存储器地址分为三部分: s 位组索引, 剩下 b 位块偏移, 还有 t = m - s - b 位标记位.</p>
 <h3 id="高速缓存的分类"><a href="#高速缓存的分类" class="headerlink" title="高速缓存的分类"></a>高速缓存的分类</h3><h4 id="直接映射高速缓存"><a href="#直接映射高速缓存" class="headerlink" title="直接映射高速缓存"></a>直接映射高速缓存</h4><p>当 E = 1 时, 称为直接映射高速缓存</p>
-<p>查找方式: </p>
+<p>查找方式:</p>
 <ul>
 <li>组选择: 从地址中取出s位索引位解释成一个对应于一个组号的无符号整数</li>
 <li>行匹配: 检查有效位是否设置 若设置再对比标记是否相同, 相同则得到缓存命中, 否则便缓存不命中</li>
@@ -102,6 +102,8 @@
 <h3 id="物理和虚拟寻址的概念"><a href="#物理和虚拟寻址的概念" class="headerlink" title="物理和虚拟寻址的概念"></a>物理和虚拟寻址的概念</h3><p>计算机的主存可以看成是一个连续字节大小的单元组成的数组, 每字节都有一个唯一的物理地址(Physical Address, PA)</p>
 <p>虚拟寻址是CPU生成一个虚拟地址(Virtual Address, VA)来访问主存, 通过内存管理单元(Memory Management Unit, MMU)硬件通过查询主存中的页表将VA翻译成PA, 页表的内容由操作系统管理, 下文会详细描述.</p>
 <h3 id="地址空间"><a href="#地址空间" class="headerlink" title="地址空间"></a>地址空间</h3><p>虚拟内存的基本思想就是允许一个数据对象有多个独立的地址, 其中每个地址都选自不同的地址空间. 主存中每个字节都有一个来自虚拟地址空间的虚拟地址和物理地址空间的物理地址</p>
+<h3 id="虚拟内存-1"><a href="#虚拟内存-1" class="headerlink" title="虚拟内存"></a>虚拟内存</h3><p>对于程序员来说, 所接触到的地址一般都是虚拟地址, 这里的虚拟地址对应的来自虚拟地址空间,虚拟内存可以看成是将主存和磁盘一起抽象成一个存储器, 由主存作为磁盘的 Cache , 通过将文件划分为固定大小的块来最为主存和磁盘间的传输单元. </p>
+<p>跟 Cache 一样,  虚拟内存需要某种方法来判断一个虚拟页是否已经被载入主存中, 于是就有了一个软硬件结合完成的一个由页表项(记录了虚拟页物理页号(有效)或磁盘地址(无效)等信息)组成的数组叫做页表, </p>
 
 
 <!--<a href="https://maochong.xin/posts/virtual_memory.html#disqus_thread" class="article-comment-link">Comments</a>
