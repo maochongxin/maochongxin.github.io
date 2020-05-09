@@ -1,0 +1,88 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>当我们定义类指针或引用时到底发生了什么</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">当我们定义类指针或引用时到底发生了什么</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2019年9月19日
+
+
+
+
+ </div>
+--->
+</div>
+
+
+<p>在《C++对象模型——内存布局》中,我解释了C++对象在不同情境下的几种内存布局.</p>
+<p>而我在读《Java核心技术·卷一》的时候看到了这样的一段话:</p>
+<pre><code>不能将一个超类的引用赋给子类变量</code></pre><p>这本书中,是通过一个员工类作为基类派生出boss类来讲解的.代码示例如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Manager boss = new Manager();</span><br><span class="line">Employee staff = new Employee();</span><br><span class="line">Employee e = boss;	//正确</span><br><span class="line">Manager m = staff;	//错误</span><br></pre></td></tr></table></figure>
+
+<p>书中提到</p>
+<pre><code>不是所有的雇员都是经理。如果赋值成功,m有可能引用了一个不是经理的Employee对象,当在后面调用 m.setBonus(...)时就有可能发生运行时错误.</code></pre><p>如果根据C++对象的内存布局来看,子类的对象往往是要比父类对象大的,如果用大的来模拟小的(切片),那么会导致越界,反之,用小的来模拟大的(切片),自然就可以了.</p>
+<p>这样解释固然很清楚,但我认为从内存分配的角度来理解这个问题会更好,这里先从C++的多态讲起,简单的来说,C++的多态就是通过父指针指向子类对象+虚函数来实现.当父类指针指向子类对象,可以调用子类从父类继承来的那部分.但如果父类中的函数声明了virtual,则会调用子类中重写的那个函数,这也就是实现了动态绑定,也就是多态.</p>
+<p>所以定义父类指针指向对象时是将该对象的地址赋给指针,然后根据指针类型的大小限定了访问范围,可以看作是对该对象内存分布的一个切片,只能访问该范围内的成员,也就是从父类继承过来的成员.由此看来C++对象内存分布的设计真是相当的精妙呢.</p>
+<p>程序验证:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    A()&#123;&#125;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> a1;</span><br><span class="line">    <span class="keyword">int</span> a2;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> :</span> <span class="keyword">public</span> A &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    B()&#123;&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> b1;</span><br><span class="line">    <span class="keyword">int</span> b2;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">const</span> <span class="keyword">char</span> * argv[])</span> </span>&#123;</span><br><span class="line">    A a;</span><br><span class="line">    B b;</span><br><span class="line">    A* Aptra = &amp;a;</span><br><span class="line">    A* Aptrb = &amp;b;</span><br><span class="line">    B* Bptrb = &amp;b;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; Aptra &lt;&lt; <span class="string">" "</span> &lt;&lt; Aptrb &lt;&lt; <span class="string">" "</span> &lt;&lt; Bptrb &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(a) &lt;&lt; <span class="string">" "</span> &lt;&lt; <span class="keyword">sizeof</span>(b) &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(*Aptra) &lt;&lt; <span class="string">" "</span></span><br><span class="line">            &lt;&lt; <span class="keyword">sizeof</span>(*Aptrb) &lt;&lt; <span class="string">" "</span> &lt;&lt; <span class="keyword">sizeof</span>(*Bptrb) &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">输出结果:</span><br><span class="line"></span><br><span class="line"><span class="number">0x7ffeefbff558</span> <span class="number">0x7ffeefbff548</span> <span class="number">0x7ffeefbff548</span></span><br><span class="line"></span><br><span class="line"><span class="number">8</span> <span class="number">16</span></span><br><span class="line"><span class="number">8</span> <span class="number">8</span> <span class="number">16</span></span><br></pre></td></tr></table></figure>
+
+
+
+<!--<a href="https://maochong.xin/posts/C++class_pointer's_behavior.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>

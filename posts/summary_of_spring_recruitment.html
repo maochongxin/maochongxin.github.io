@@ -1,0 +1,88 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>2020春招总结</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">2020春招总结</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2020年4月20日
+
+
+
+
+ </div>
+--->
+</div>
+
+
+<p>整个春招, 我总共投了十多家公司, 从BAT到各种独角兽都有, 从最终的情况来看, 能通过绝大多数公司的简历筛选. </p>
+<p>简历通过并且拿到面试资格的有: 腾讯, 阿里, 百度, 美团, 携程, ThoughtWorks, 京东, 京东数科, 度小满金融, 360, 微众银行, 网易杭研, 七牛云, 几个独角兽没有反馈分别是图森未来, 商汤(3月中旬投递), 挂掉简历的有拼多多, 网易互娱, 虎牙. </p>
+<p>最终拿了腾讯PCG的offer, 因为考虑腾讯已经达到我的预期, 技术栈很匹配, 未来发展也不错, 并且完成时间较早, 剩下的时间打算先学习实习所需的技能已经刷一下MIT的6.824等课程, 所以很多面试后续都拒掉了.</p>
+<p>总结一下我的简历, 实习经历是写了盛大游戏实习的时候做过的一些模块, 当时的主要任务还是做一款手游业务相关以及维护该游戏的GM工具, 尽管后续好像这款游戏还没有上线(不过这应该是运营的锅, 跟技术关系不大) 其中自己设计并开发的几个模块的思想运用到春招面试中的系统设计题, 不知道是不是较优的解法, 但看面试官的态度, 应该还可以接受. 至于项目经历, 我是写了我从寒假开始就开始做的一个类似于 Bitcask 思想的 key-value 数据库的存储引擎, 其中技术细节并不多, 而且还存在部分问题, 例如大量数据存储后的重建索引比较慢, 这一点我在面试中跟面试官讨论过相关的做法. 关于这个项目, 我本来是想写一个引擎加Clinet和Server, 奈何水平不够, 时间不够, 只能做完一个半成品的引擎, 不够后续我也打算长期进行维护, 到时候也方便毕业论文了. 如果全部完成的话, 这个项目应该是比较亮眼的, 毕竟可以把科班专业课全部包含应用, 不过在面试中看来, 这个半成品项目也能多少吸引一下面试官的注意力, 大概是各种「XX管理系统」太多了, 也是时无英雄使竖子成名.</p>
+<p>对于技术栈来说, 我是走的Linux C++后台开发, 这个技术方向就决定了实习不是很好找, 国内大厂大规模用C++的是在太少, 我知道的貌似只有腾讯和百度以及部分游戏公司, 为了恰饭, 我去腾讯也是要转Go的, 不过因为Go我也一直打算要学, 所以是愉快的答应了.</p>
+<p>总结一下考察过的知识点, 具体的题目我忘了, 而且我觉得复习具体的题目用处也不大, 更关键的是围绕着具体的知识去复习, 以及各种知识要掌握到怎样的程度. </p>
+<p>先说语言, 不知道为什么, 我感觉语言部分问的并不多, 哪怕我在简历中注明了熟悉C++11也没有怎么去问过相关的问题(说好的手撕shared_ptr呢, 我真的会手撕), 对于C++来说, 更多的关注点在于其语言特性以及标准库, 多态的实现方式是肯定会问的, 这里也许会牵扯出一些其他的问题,  例如CRTP, duck typing, override overwrite的区别等等, 这也是我经历过的大多数面试的节奏, 顺着一个问题慢慢展开.其次很重要的一点是STL, 各个容器的实现, 适用范围等是需要清楚的, 这种知识没什么好说的, 适用范围往往是根据其实现采用的底层数据结构, 算法来决定的. 另外, 我觉得STL的设计也很有意思, 可能不方便面试去考察, 但是对于写出优美健壮的代码很有借鉴意义. 对于C++来说, 我觉得不是很容易去速成, 真正的C++高手一出手就能看出功力, 我也是三年不断的在学习C++, 陆陆续续读了几遍C++的几篇著作, 例如 Effective 系列, Thinking in C++, STL源码剖析, 对象模型等.</p>
+<p>语言必然要对应到其开发环境上, 我主要是在Linux上进行了大量练习, 关于Linux来说, 我还没有很熟悉, 对于系统原理的部分, 多半是来自于操作系统课上的知识, 以及结合该部分知识对于一些API实现的理解, 例如 mmap, fork等. 同样的Linux开发环境的学习也不是一个速成的过程, 我个人觉得其中有大量的琐碎的知识点, 需要在日常工作中慢慢积累, 但是一些常用的阻塞/非阻塞IO, 同步异步调用, 进程通信, 线程同步等是肯定要熟悉的, 并且需要知道孰优孰劣, 在什么情境下该用什么, 对于这部分想要进行宏观的学习, 我比较推荐看看《UNP》这本书,结合着一些项目的情景去使用相关的API.</p>
+<p>说到后台开发, 必须要提到网络, 对于HTTP, TCP, UDP等常用协议是一定要熟练的, 并且尝试对其进行抓包, 看看各种情况(例如TCP握手, 重传, 挥手) 发的包是怎样的, TCP的可靠传输决定了它比其他几个协议都要复杂, 关于流量控制, 拥塞控制的算法, 在Top Down这本书的网站上有很好的动画来解释, 协议层面的问题对于看书就能解决, 运用到开发当中, 需要结合协议本身来理解, 比如 socket 编程中 write 的返回时刻, 还有 UDP套接字为什么还需要 connect 的调用等, 当然这些问题还需要联系Linux内核工作的原理去理解.</p>
+<p>接下来是数据库, 对于数据库这块, 是我的弱项, 一开始因为不熟悉Mysql吃了不少亏, 对于Mysql来说, 索引以及其事务是重中之重, 对于索引来说, 需要理解其底层实现, 数据结构选择的优劣, 索引类型, 主流引擎选择的实现比如InnoDB, MyISAM, 另外结合索引实现的性质, 对于最左匹配, 聚簇索引的理解. 对于ACID事务, 需要重点要关注一下隔离性, 以及事务实现. 另外, 还要知道主从复制的原理, 这个往往是在项目中抛出来的问题, 需要考虑主从一致性等问题. 现在的后台往往还需要掌握一门Nosql, 因为我写过一个引擎, 所以读过一些Redis的源码, 个人觉得Redis对于事件驱动编程算是一个很不错的教科书项目, 一般面试中会考察各种底层数据结构的实现, 难度并不大, 其中很多的设计思想才是重点. </p>
+<p>对于数据结构与算法, 这个不必说重要程度, 我在 Leetcode 上刷了大约300道题, 剑指offer刷了三分之二, 除了要求bug free之外, 我想说一个代码风格的问题, 因为工程与刷题的区别, 很少会有人去维护自己提交的算法题代码, 甚至一言不合去重写也花不了多久, 但是工程上是需要多人合作开发并且不断迭代的, 所以说, 代码风格是在我的面试经验看来也是一个很重要的考察点, 例如C++来说, 尽可能的去使用模版配合迭代器去写容器无关的代码, 以及RAII思想的应用, 当然算法题是不需要用到这些的, 不过还是从变量命名规范, 不轻易使用std命名空间等手段去体现较好的的码风.</p>
+<p>距离收到Offer已经快一个周了, 当时的心态炸裂在现在看来也没那么恐怖, 回想过去很多抗不下来的时刻后来看看也都不过如此.现在我终于可以把这段话说出来了: “无论你们用什么手段，一定要想到办法跑到腾讯大厦最顶楼一次，那里是一个巨大的花园广场，周围是巨大的钢柱，透过落地窗能鸟瞰整个深圳。而且，那里还可以坐下来抽根烟，发发呆。我保证那会是一个非常奇特的经历：你站在巨大的QQ的logo后面，风从整个深圳向你吹来”.  实习加油!</p>
+
+
+<!--<a href="https://maochong.xin/posts/summary_of_spring_recruitment.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>

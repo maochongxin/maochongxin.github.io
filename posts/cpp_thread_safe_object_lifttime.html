@@ -1,0 +1,194 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>线程安全的对象生命周期管理</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">线程安全的对象生命周期管理</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2020年5月3日
+
+
+
+
+ </div>
+--->
+</div>
+
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#存在的问题"><span class="toc-text">存在的问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#线程安全的class的定义"><span class="toc-text">线程安全的class的定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#对象的创建"><span class="toc-text">对象的创建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#对象的销毁"><span class="toc-text">对象的销毁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#可能会死锁的例子"><span class="toc-text">可能会死锁的例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#线程安全的Observer"><span class="toc-text">线程安全的Observer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#解决方案-shared-ptr-weak-ptr"><span class="toc-text">解决方案 shared_ptr/weak_ptr</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#关于shared-ptr的线程安全"><span class="toc-text">关于shared_ptr的线程安全</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#shared-ptr技术与陷阱"><span class="toc-text">shared_ptr技术与陷阱</span></a></li></ol>
+<h2 id="存在的问题"><a href="#存在的问题" class="headerlink" title="存在的问题"></a>存在的问题</h2><p>对于C++来说, 对象的生命周期需要程序员自己管理, 那么当一个对象可以被多个线程看到时, 对象的析构就会存在竞态条件(race condition):</p>
+<ul>
+<li>在析构一个对象时, 会不会存在其他线程在使用该对象</li>
+<li>在使用一个对象时, 对象会不会在其他线程被析构</li>
+<li>在使用某个对象之前, 如何判断这个对象还活着, 它的析构函数会不会恰好只执行了一半</li>
+</ul>
+<h2 id="线程安全的class的定义"><a href="#线程安全的class的定义" class="headerlink" title="线程安全的class的定义"></a>线程安全的class的定义</h2><p>在解决上述问题之前, 先对线程安全的类的要求进行定义:</p>
+<ul>
+<li>多个线程同时访问时, 表现出正确的行为</li>
+<li>无论操作系统如何调度这些线程, 无论线程的执行顺序如何交织</li>
+<li>调用端代码无需额外的同步或其他协调操作</li>
+</ul>
+<p>根据上面的定义, STL里大多数容器都不是线程安全的, 例如: std::string, std::vector, std::map等, 需要在外部加锁才能供多个线程同时访问.</p>
+<h2 id="对象的创建"><a href="#对象的创建" class="headerlink" title="对象的创建"></a>对象的创建</h2><p>对象的创建要保证线程安全比较简单, 只要不在构造期间泄露this指针即可. 具体做法是 (1)不要在构造函数中注册任何回调.(2)不要在构造函数中把this指针传给跨线程对象.(3)即使在构造函数最后一行也不要.</p>
+<p>之所以要这样, 是因为构造函数执行完之前, 对象的初始化动作还没有完成, 如果泄露了this指针, 有可能其他线程会访问一个半成品对象. 之所以在构造函数的最后一行也不能泄露是因为该类可能作为基类使用, 它的构造函数执行完后还需要继续执行子类的构造函数.</p>
+<p>对于需要上述需求的, 可以通过二段构造(构造函数+initialize()), 并且可以使得构造函数不必主动抛出异常, 在initialize()的返回值判断是否构造成功, 简化错误处理.</p>
+<p>对于二段式构造可以看Bjarne Stroustrup 在<a href="https://www.cise.ufl.edu/~manuel/stroustrup/ex.pdf" target="_blank" rel="noopener">Standard-Library Exception Safety</a> 中提到的Delayed acquisition, 也就是在设计类的时候思考清楚, 是否真的有必要在构造函数中申请内存. 如果需要, 可以参考vector::resize()的思路</p>
+<h2 id="对象的销毁"><a href="#对象的销毁" class="headerlink" title="对象的销毁"></a>对象的销毁</h2><p>对于析构函数来说, mutex无法保证安全. 对于互斥语义来说, 只能保证对于临界资源只有一个线程访问, 因此可能会出现一些问题, 考虑以下代码</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Foo::~Foo() &#123;</span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">lock</span><span class="params">(mutex_)</span></span>;</span><br><span class="line">    <span class="comment">// free internal state  (1)</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> Foo::update() &#123;</span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">lock</span><span class="params">(mutex_)</span></span>; <span class="comment">// (2)</span></span><br><span class="line">    <span class="comment">// make use of internal state</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// thread A</span></span><br><span class="line"><span class="keyword">delete</span> x;</span><br><span class="line">x = <span class="literal">NULL</span>; <span class="comment">// helpless</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// thread B</span></span><br><span class="line"><span class="keyword">if</span> (x) &#123;</span><br><span class="line">    x-&gt;update();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面代码段在 x = NULL; 处的注释是 helpless, 也就是这里是存在问题的, 当线程A 执行到(1)处时, 此时必然已经持有互斥锁, 如果此时线程B通过了 if 检测, 在(2)处阻塞, 这时候接下来得行为是未定义的, 因为构造函数会把mutex析构掉. 也就是说, 如果mutex作为class的数据成员不能保护析构, 只能用来保护正常生命期其他数据成员的读和写, 而析构行为是发生在对象生命期结束时(后)的. 对于基类对象来说, 当执行到基类的析构函数, 表示子类的成员已经被析构了, 那么仍然没有保护整个析构过程.</p>
+<h2 id="可能会死锁的例子"><a href="#可能会死锁的例子" class="headerlink" title="可能会死锁的例子"></a>可能会死锁的例子</h2><p>读写同一个class两个对象存在死锁的例子:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">swap</span><span class="params">(Object&amp; lhs, Object&amp; rhs)</span> </span>&#123;</span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">lLock</span><span class="params">(lhs.mutex_)</span></span>;</span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">rLokc</span><span class="params">(rhs.mutex_)</span></span>;</span><br><span class="line">    <span class="comment">// swap</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样当线程A执行 swap(a, b) 线程B执行 swap(b, a)时就可能会产生死锁.</p>
+<p>同样的道理在 operator= 也会存在</p>
+<p>假设一个用锁实现的Counter是这样的</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Counter</span>:</span> boost::noncopyable &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Counter(): value_(<span class="number">0</span>) &#123;&#125;</span><br><span class="line">    <span class="keyword">int64_t</span> value() <span class="keyword">const</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int64_t</span> value_;</span><br><span class="line">    <span class="keyword">mutable</span> MutexLock mutex_;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int64_t</span> Counter::value() <span class="keyword">const</span> &#123;</span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">lock</span><span class="params">(mutex_)</span></span>;</span><br><span class="line">    <span class="keyword">return</span> value_;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int64_t</span> Counter::getAndIncrease() &#123;</span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">lock</span><span class="params">(mutex_)</span></span>;</span><br><span class="line">    <span class="keyword">int64_t</span> ret = value_++;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它的operator= 实现如下:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Counter&amp; Counter::<span class="keyword">operator</span>=(<span class="keyword">const</span> Counter&amp; rhs) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span> == &amp;rhs) &#123; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">myLock</span><span class="params">(mutex_)</span></span>; <span class="comment">// 这里存在潜在死锁 线程A a = b; 线程B b = a;</span></span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">itsLock</span><span class="params">(rhs.mutex_)</span></span>;</span><br><span class="line"></span><br><span class="line">    value_ = rhs.value_; <span class="comment">// 这里如果改成 value_ = rhs.value() 会与上一句死锁</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="线程安全的Observer"><a href="#线程安全的Observer" class="headerlink" title="线程安全的Observer"></a>线程安全的Observer</h2><p>在面向对象设计中, 对象的关系主要有三种: composition, aggregation, association.</p>
+<p>这三种关系中, composition(组合)在多线程下比较安全, 对象x的生命周期为拥有者owner控制, owner析构的时候, 会把x也析构掉, 所以一半不会造成内存泄漏活着重复释放的问题.</p>
+<p>对于aggregation(聚合)和association(关联)来说会存在一定的问题. association表示一个对象持有另一个对象的引用(或指针), 但是另一个对象的生命周期不受该对象控制, 所以可能会出现上述说过的问题.</p>
+<p>考虑使用对象池的方式解决: 只创建不销毁, 使用一个对象池来暂存使用过的对象, 申请新对象时, 如果对象池中有存货, 就重复利用现有的对象, 当对象使用完后放回池子而不释放.</p>
+<p>这种方法可以避免失效对象的访问, 但还是带来一些问题:</p>
+<ul>
+<li>对象池的线程安全, 如何安全完整的把对象放回池子里, 防止部分放回(线程A认为已经放回了, 线程B认为对象还活着)</li>
+<li>全局对象引发lock contention, 这个集中化的对象池会不会把多线程并发操作串行化</li>
+<li>如果共享对象的类型不止一种, 那么是重复实现对象池还是使用类模版</li>
+<li>会不会造成内存的泄露与分片? 因为对象池占用的内存只增不减,而且多个对象池不能共享内存(这里是指不能从不同的对象池获取对象, 会割裂heap/free store) <a href="https://www.moderncplusplus.com/free-store-vs-heap/" target="_blank" rel="noopener">heap vs free stroe</a></li>
+</ul>
+<p>看一个注册非静态成员函数回调成为association的例子:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Observer 模式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Observer</span> &#123;</span> <span class="comment">// : boost::noncopyable</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">virtual</span> ~Observer();</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">update</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Observable</span> &#123;</span> <span class="comment">// : boost::noncopyable</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">register_</span><span class="params">(Observer* x)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">unregister</span><span class="params">(Observer* x)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">notifyObservers</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (Observer* x : observers_) &#123;</span><br><span class="line">            x-&gt;update();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;Observer*&gt; observers_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这里存在的问题在于, 通知每一个Observer对象时, 需要知道该对象是否还存活, 这里可以考虑在Observer的析构函数中解除注册, 但有引来了新的问题.</p>
+<p>如下代码:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Observer</span> &#123;</span></span><br><span class="line">    <span class="comment">// 同前</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">observe</span><span class="params">(Observer* s)</span> </span>&#123;</span><br><span class="line">        s-&gt;register_(<span class="keyword">this</span>);</span><br><span class="line">        subject_ = s;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">virtual</span> ~Observer() &#123;</span><br><span class="line">        subject_-&gt;unregister(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Observable* subject_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这里有两个race conditions,(1)unregister如何知道subject_还活着 (2)当线程A执行到unregister之前, 线程B执行到update()之前, x正好就是线程A正在析构的对象.</p>
+<p>这里存在的问题可以通过加锁来实现, 但是在哪加锁, 谁来持有锁又是难题, 所以需要引入一个活着的对象来帮助管理对象的生命周期, 可以查看是否存活.</p>
+<h2 id="解决方案-shared-ptr-weak-ptr"><a href="#解决方案-shared-ptr-weak-ptr" class="headerlink" title="解决方案 shared_ptr/weak_ptr"></a>解决方案 shared_ptr/weak_ptr</h2><p>shared_ptr的几个要点:</p>
+<ul>
+<li>shared_ptr是强引用, 只要有一个指向x的shared_ptr存在, x就不会析构, 当指向x的最后一个shared_ptr析构或reset(), x保证会被销毁</li>
+<li>weak_ptr不控制对象的生命期, 但它可以知道对象是否还活着,如果对象还活着可以提升为有效的shared_ptr, 如果对象已经被销毁那么就会返回一个空shared_ptr. 这个提升行为是线程安全的</li>
+<li>shared_ptr/weak_ptr的计数在主流平台上是原子操作, 没有用锁</li>
+<li>shared_ptr/weak_ptr的线程安全级别与std::string和STL容器一样</li>
+</ul>
+<p>孟岩《垃圾收集机制批判》中对智能指针的优势: <strong>“C++利用智能指针达成的效果是: 一旦对象不再被引用, 系统刻不容缓, 立刻回收内存. 这通常发生在关键任务完成后的清理(clean up)时期, 不会影响关键任务的实时性, 同时, 内存里所有的对象都是有用的, 绝对没有垃圾空占内存.”</strong></p>
+<p>应用到Observer上:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Observable</span> &#123;</span> <span class="comment">// not 100% thread safe</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">register_</span><span class="params">(<span class="keyword">const</span> weak_ptr&lt;Observer&gt;&amp; x)</span></span>;</span><br><span class="line">    <span class="comment">// void unregister(weak_ptr&lt;Observer&gt; x); // 不再需要</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">notifyObservers</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">mutable</span> MutexLock mutex_;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;weak_ptr&lt;Observer&gt;&gt; observers_; <span class="comment">// 这里如果改成shared_ptr, 就不会主动释放内存和从容器中取出</span></span><br><span class="line">    <span class="keyword">using</span> Iterator = <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;weak_ptr&lt;Observer&gt;&gt;::iterator;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> Observable::notifyObservers() &#123;</span><br><span class="line">    <span class="function">MutexLockGuard <span class="title">lock</span><span class="params">(mutex_)</span></span>;</span><br><span class="line">    Iterator it = observers_.begin();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (it != observers_.end()) &#123;</span><br><span class="line">        <span class="built_in">shared_ptr</span>&lt;Observer&gt; obj(it-&gt;lock());</span><br><span class="line">        <span class="keyword">if</span> (obj) &#123;</span><br><span class="line">            <span class="comment">// 提升成功, 此时引用计数至少为2 lock构造一个临时对象,拷贝到obj</span></span><br><span class="line">            obj-&gt;update();</span><br><span class="line">            ++it;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 对象已销毁, 从 容器中拿掉weak_ptr</span></span><br><span class="line">            it = observers_.erase(it);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述方案部分解决了Observer模式的线程安全, 但又引来了新的问题:</p>
+<ul>
+<li>侵入型: 强制要求Observer必须以shared_ptr来管理</li>
+<li>不是完全线程安全: Observer析构函数会执行subject_-&gt;unregister(this), 但有可能subject_已经被析构掉了, 为了解决这个问题, 又需要 Observable 本身是shared_ptr管理, 并且subject_多半是个 weak_ptr<observable>.</observable></li>
+<li>锁争用: Observable的三个成员函数都是用mutex来同步, 会造成register_()和unregister()等待notifyObservers(), 但这个notifyObservers()的执行时间是无上限的, 因为会同步调用各个update()函数. 我们希望register_()和uniregister()的执行时间不会超过某个固定的上限.</li>
+<li>死锁: 如果notifyObservers()中的update虚函数调用了(un)register, 这样会有两种情况, 如果mutex_是不可重入的, 就会死锁; 如果mutex_是可重入的程序就会迭代器失效(vector 在遍历期间被修改了). 这个问题只能通过双方协商好解决,例如使用可重入的mutex_, 把容器换成std::list, 并把迭代器往前挪一行.</li>
+</ul>
+<h2 id="关于shared-ptr的线程安全"><a href="#关于shared-ptr的线程安全" class="headerlink" title="关于shared_ptr的线程安全"></a>关于shared_ptr的线程安全</h2><p>shared_ptr本身并不是100%线程安全的, 它的引用计数本身是安全且无锁的, 但对象的读写不是, 因为它有两个成员, 读写操作不能原子化. shared_ptr的线程安全和内建类型,标准库容器, std::string一样, 即:</p>
+<ul>
+<li>一个shared_ptr对象实体可以被多个线程同时读取</li>
+<li>两个shared_ptr对象实体可以被两个线程同时写入, “析构”算写操作</li>
+<li>如果要从多个线程读写同一个shared_ptr对象, 那么需要加锁</li>
+</ul>
+<p>这是shared_ptr本身的线程安全级别, 不是管理的对象的线程安全级别. 如果在多个线程中同时访问同一个shared_ptr, 正确做法是mutex保护:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MutexLock mutex; <span class="comment">// No need for ReadWriterLock</span></span><br><span class="line"><span class="built_in">shared_ptr</span>&lt;Foo&gt; globalPtr;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 把globalPtr安全的传给doit()</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">doit</span><span class="params">(<span class="keyword">const</span> <span class="built_in">shared_ptr</span>&lt;Foo&gt;&amp; pFoo)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>globalPtr可以被多个线程看到, 所以读写需要加锁, 为了性能只需要使用互斥锁就可以. 因为临界区很小, 所以互斥锁也不会阻塞并发读.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">read</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">shared_ptr</span>&lt;Foo&gt; localPtr;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function">MutexLockGuard <span class="title">lock</span><span class="params">(mutex)</span></span>;</span><br><span class="line">        locakPtr = globalPtr; <span class="comment">// read globalPtr</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// use localPtr since here, 读写localPtr无需加锁.</span></span><br><span class="line">    doit(localPtr);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">write</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">shared_ptr</span>&lt;Foo&gt; newPtr(<span class="keyword">new</span> Foo); <span class="comment">// 在临界区外创建, 而不是临界区内globalPtr.reset(new Foo) 减少临界区长度</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function">MutexLockGuard <span class="title">lock</span><span class="params">(mutex)</span></span>;</span><br><span class="line">        globalPtr = newPtr;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// use newPtr since here, 读写newPtr无需加锁.</span></span><br><span class="line">    doit(newPtr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的read()和write()在临界区外都没有再访问globalPtr, 而是利用了拷贝一个新的栈上对象, 然后在访问这个栈上对象.</p>
+<h2 id="shared-ptr技术与陷阱"><a href="#shared-ptr技术与陷阱" class="headerlink" title="shared_ptr技术与陷阱"></a>shared_ptr技术与陷阱</h2><ul>
+<li>意外延长对象的生命期</li>
+</ul>
+<p>shared_ptr是强引用, 只要有一个指向x对象的shared_ptr存在, 该对象就确保不会被析构. 因为shared_ptr的拷贝构造和拷贝赋值, 如果不小心遗留了一份拷贝, 那么该对象就永世长存了. 另外std::bind,也会导致这个问题, std::bind会把实参拷贝一份, 如果参数是shared_ptr, 那么拷贝的对象的生命周期就不会短于std::function对象:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> &#123;</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">doit</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">shared_ptr</span>&lt;Foo&gt; pFoo(<span class="keyword">new</span> Foo);</span><br><span class="line"><span class="built_in">std</span>::function&lt;<span class="keyword">void</span>()&gt; func = <span class="built_in">std</span>::bind(&amp;Foo::doit, pFoo); <span class="comment">// long life foo</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>作为函数参数</li>
+</ul>
+<p>因为要修改引用计数(拷贝的时候通常要加锁), shared_ptr的拷贝开销要比拷贝原始指针要高, 但是多数情况都可以pass by const reference, 一个线程只要最外层函数有一个实体对象, 之后就可以pass by const reference来使用这个shared_ptr. 例如几个函数都用到Foo对象:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">save</span><span class="params">(<span class="keyword">const</span> <span class="built_in">shared_ptr</span>&lt;Foo&gt;&amp; pFoo)</span></span>; <span class="comment">// pass by const reference</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">validateAccount</span><span class="params">(<span class="keyword">const</span> Foo&amp; foo)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">validate</span><span class="params">(<span class="keyword">const</span> <span class="built_in">shared_ptr</span>&lt;Foo&gt;&amp; pFoo)</span> </span>&#123; <span class="comment">// pass by const reference</span></span><br><span class="line">    validateAccount(*pFoo);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通常情况下, 我们可以pass by const reference:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">onMessage</span><span class="params">(<span class="keyword">const</span> <span class="built_in">string</span>&amp; msg)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">shared_ptr</span>&lt;Foo&gt; pFoo(<span class="keyword">new</span> Foo(msg)); <span class="comment">// 只要最外层有一个实体, 就是安全的</span></span><br><span class="line">    <span class="keyword">if</span> (validate(pFoo)) &#123;   <span class="comment">// 没有拷贝</span></span><br><span class="line">        save(pFoo);         <span class="comment">// 没有拷贝</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>析构动作在创建时被捕获,这意味着:</p>
+<ul>
+<li>虚析构不再是必要的</li>
+<li>shared_ptr<void> 可以持有任何对象, 而且能安全的释放</void></li>
+<li>shared_ptr对象可以安全的跨越边界模块, 比如从DLL里返回, 而不会造成从模块A分配的的内存在模块B里被释放这种错误</li>
+<li>二进制兼容性, 即便Foo对象的大小变了, 那么旧的客户代码仍然可以使用新的动态库, 而无需重新编译. 前提是Foo的头文件中不出现访问对象的成员的inline函数, 而且Foo对象是由动态库中Factory构造, 返回其shared_ptr</li>
+<li>析构动作可以定制</li>
+</ul>
+</li>
+<li><p>析构所在的线程</p>
+</li>
+</ul>
+<p>对象x的析构是在最后一个指向x的shared_ptr离开其作用域(shared_ptr被析构)的同一个线程析构的, 这个线程不一定是对象诞生的线程. 这个特性是个双刃剑: 如果对象的析构比较耗时, 就会拖慢关键线程的速度; 可以用一个单独的线程专门做析构, 通过一个BlockingQueue&lt;shared_ptr<void>&gt;把对象析构都转移到那个专用线程, 解放关键线程.</void></p>
+<ul>
+<li>现成的RAII handle</li>
+</ul>
+<p>初学C++的教条是new和delete成对出现, 如果使用RAII, 要改成”每一个明确的资源配置动作都应该在单一语句中执行,并在该语句中立刻将配置获得的资源交给handle对象, 程序一般不出现delete”. shared_ptr是管理共享资源的利器, 需要注意避免循环引用, 通常的做法是owner持有指向child的shared_ptr, child持有指向owner的weak_ptr.</p>
+
+
+<!--<a href="https://maochong.xin/posts/cpp_thread_safe_object_lifttime.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,97 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>欧拉函数</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">欧拉函数</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2019年9月19日
+
+
+
+
+ </div>
+--->
+</div>
+
+
+<p>先要吐槽一下我所在学校用的课本高等教育出版社的《离散数学(第二版)》,我在看讲到包含容斥定理这个问题时讲到了求欧拉函数的值,这里书上跳过介绍直接给出了<a href="https://baike.baidu.com/item/算术基本定理/10920095?fr=aladdin" target="_blank" rel="noopener">算术基本定理</a>「任何一个大于1的自然数 N,如果N不为质数，那么N可以唯一分解成有限个质数的乘积」这个结论.尽管是初等数论的内容,但我相信还是有很多同学不知道.可能是我不听课的缘故(我也不知道老师讲没讲),但就单单对这本书来说,我认为这一块是缺少证明过程的,如果学生用这本书来自学的话,那么会因为这一个定理不知道会增加很大难度.</p>
+<hr>
+<p>那么下面我来系统的写一下证明欧拉函数的过程🙃.</p>
+<p>欧拉函数是用来计算给定一个正整数n,求小于等于n的正整数中,有多少个与n构成互质关系的方法(互质:如果两个数的公约数只有1,那么称这两个数互质),用以φ(n)表示.</p>
+<p>例如φ(6) = 2,φ(8) = 4;</p>
+<p>下面给出证明过程:</p>
+<p>1.当n==1 φ(n) = 1; 因为1与任何数(包括自身)都构成互质关系.</p>
+<p>2.当n是质数,则φ(n) = n - 1;因为质数与小于它的每一个数，都构成互质关系.</p>
+<p>3.当n是质数p的某一次方,即n = p^k (k&gt;=1 &amp;&amp; k为整数) 那么</p>
+<pre><code>φ(n) = p^k - p^k-1</code></pre><p>因为当一个数不包含质数p才可能与n互质.而包含质数p的数一共有 p^k-1 个 分别是 1 x p,2 x p,3 x p…..p^(k-1) * p. 去掉他们就得到与n互质的数.</p>
+<p>同时这个式子也就可以写成这样的形式</p>
+<pre><code>φ(p^k) = p^k - p^k-1 = p^k (1-1/p);</code></pre><p>可以看出上面这个式子当 k==1 时也就是当n为质数时的情况.</p>
+<p>4.如果n可以分解为两个互质的整数之积(我上面提到的算术基本定理在这里可以进行拓展) 即</p>
+<pre><code>n = p1 x p2</code></pre><p>那么</p>
+<pre><code>φ(n) = φ(p1p2) = φ(p1)φ(p2)</code></pre><p>也就是积的欧拉函数等于各个因数的欧拉函数之积.</p>
+<p>解释: 如果a与p1互质(a &lt; p1)，b与p2互质(b &lt; p2)，c与p1p2互质(c &lt; p1p2)，则c与数对 (a,b) 是一一对应关系。由于a的值有φ(p1)种可能，b的值有φ(p2)种可能，则数对 (a,b) 有φ(p1)φ(p2)种可能，而c的值有φ(p1p2)种可能，所以φ(p1p2)就等于φ(p1)φ(p2).</p>
+<p>5.这里用到了算术基本定理,也就是对第4条的拓展, 「任何一个大于1的自然数 N,如果N不为质数，那么N可以唯一分解成有限个质数的乘积」.</p>
+<p>由4得</p>
+<pre><code>φ(n) = φ(p1^k1)φ(p2^k2)...φ(pr^kr)</code></pre><p>由3得 </p>
+<pre><code>φ(n) = p1^k1 p2^k2 ...pr^kr (1-1/p1)(1-1/p2)...(1-1/pr)</code></pre><p>也就是</p>
+<pre><code>φ(n) = n(1-1/p1)(1-1/p2)...(1-1/pr)</code></pre><p>证毕.</p>
+
+
+<!--<a href="https://maochong.xin/posts/euler_totient.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>
