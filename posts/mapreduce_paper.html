@@ -1,0 +1,94 @@
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+	
+	<title>MapReduce论文阅读</title>
+	<meta name="keywords" content="maochong.xin,毛崇鑫,毛崇鑫的blog">
+
+    <meta https-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+	   <link href="/css/main.css?v=3" rel="stylesheet" type="text/css">
+    
+        <script src="/js/util.js"></script>
+        <script>
+            if(isMobile()) {
+                loadjscssfile('../css/mobile.css', 'css');
+            } else {
+                loadjscssfile('../css/desktop.css', 'css');
+            }
+        </script> 
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3">
+    
+    
+
+</head>
+
+<body>
+
+
+<h2 class="title">MapReduce论文阅读</h2>
+<!---
+<div style="text-align:center;margin-top: -10px;">
+<div class="article-category">
+发表于2020年7月6日
+
+
+
+
+ </div>
+--->
+</div>
+
+<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-Execution-Overview"><span class="toc-text">3.1 Execution Overview</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-Master-Data-Structures"><span class="toc-text">3.2 Master Data Structures</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-3-Fault-Tolerance"><span class="toc-text">3.3 Fault Tolerance</span></a></li></ol>
+<h2 id="3-1-Execution-Overview"><a href="#3-1-Execution-Overview" class="headerlink" title="3.1 Execution Overview"></a>3.1 Execution Overview</h2><p>自动把输入数据分成M份,分配新的Map调用, 可以在不同机器并行的进行处理.  按照划分函数(例如 hash(key) mod R, 这个R是用户指定的), 对中间值key空间划分, 分配新的Reduce调用.</p>
+<p><img src="https://www.researchgate.net/profile/Kesheng_Wu/publication/200084991/figure/fig2/AS:305985324371969@1449963994125/An-overview-of-the-MapReduce-execution-process-adapted-from-28.png" alt></p>
+<ol>
+<li>MapReduce library把输入文件分成M份, 每份16-64MB(大小可以通过参数调节), 然后在一组机器上启动</li>
+<li>master程序负责为worker分配任务. 总共有M个map任务和R个reduce任务, master选取空闲的worker, 为他分配一个map或reduce任务</li>
+<li>处理map任务的worker从输入分片读入数据, 解析出输入数据的K-V对, 传递给Map函数, 生成的K-V中间结果缓存在内存中</li>
+<li>map任务的中间结果定期的写入本地磁盘. 以partition函数分成R个部分. R个部分的磁盘地址推动到master, master转发给相应的reduce worker</li>
+<li>当reduce worker接收到master发送的地址, 它会通过RPC从map worker磁盘读取数据, 当读取完所有的中间数据, 它会通过中间值的key排序, 方便相同的key的value会被聚合到一起. 这个排序是必要的, 因为通常是很多不同key的kv对分配到同一个reduce任务.如果中间值数据量很大, 以至于不能全部放到内存里, 一个额外的排序就发挥作用了.</li>
+<li>reduce worker遍历排序后的中间值, 对于相同的key 合并所有的value, 传递给Reduce函数, 最终生成的结果追加到结果文件中</li>
+<li>当所有的map和reduce任务都完成时, master唤醒用户程序, 返回到用户程序空间继续执行用户代码.</li>
+</ol>
+<p>执行成功后, 输出结果在R个文件中, 通常用户不需要合并R个文件, 因为可以作为新的MapReduce处理逻辑的输入, 或者其他分布式应用的输入.</p>
+<h2 id="3-2-Master-Data-Structures"><a href="#3-2-Master-Data-Structures" class="headerlink" title="3.2 Master Data Structures"></a>3.2 Master Data Structures</h2><p>master维护了一些数据结构. 为每个map任务和reduce任务存储他们的状态(空闲、处理中、完成), worker机器的信息(非空闲状态)</p>
+<p>master相当于中间文件在map任务和reduce任务之间发送的管道. 因此, 对于每一个完成状态的map任务, master会存储他们生成的R个中间文件的位置和大小, 并在收到map任务完成的消息后更新. 不断的把存储的位置和大小信息发送给处理中的reduce任务</p>
+<p>这里很容易理解, master相当于一个管理员, 负责调度worker的工作, 因此需要记录每个worker的工作状态以及工作成果.</p>
+<h2 id="3-3-Fault-Tolerance"><a href="#3-3-Fault-Tolerance" class="headerlink" title="3.3 Fault Tolerance"></a>3.3 Fault Tolerance</h2><p>因为MapReduce是用来处理使用集群处理大量数据的, 所以必须要有容灾措施</p>
+<p>很显然, 上述提到的master只有一个, 如果master宕机了, 剩余的系统就无法正常运作, 所以需要有分别针对worker和master宕机的处理方式</p>
+<p><strong>Worker Failure</strong><br>master会定期的ping每个worker节点. 如果一段时间没有收到一个worker的rsp, master就会标记这个worker failed. 任何有这个worker完成的map任务都会被重置为初始的idle状态. </p>
+
+
+<!--<a href="https://maochong.xin/posts/mapreduce_paper.html#disqus_thread" class="article-comment-link">Comments</a>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = ''; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+-->
+<div style="display:none">
+<script src="https://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>script>
+</div>
+
+
+
+
+
+
+</body>
+</html>
